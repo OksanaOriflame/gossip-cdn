@@ -1,4 +1,3 @@
-
 BuildUnit = str
 
 class MerkleTree:

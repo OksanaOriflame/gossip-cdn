@@ -29,7 +29,7 @@ def main():
     if args.nb_host and args.nb_port > 0:
         neighbour_addr = (args.nb_host, args.nb_port)
     
-    node = CdnNode(args.host, args.port, neighbour_addr=neighbour_addr)
+    node = CdnNode(args.host, args.port)
     try:
         node.start()
     except KeyboardInterrupt:
