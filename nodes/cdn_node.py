@@ -1,7 +1,7 @@
 import socket
 from threading import Thread
 from nodes.node import Node, Address
-from nodes.merkle_tree import MerkleTree
+from merkle_tree.merkle_tree import MerkleTree
 
 class CdnNode(Node, MerkleTree, Thread):
     def __init__(self, ip: str, port: int, neighbour_addr: Address = None):
