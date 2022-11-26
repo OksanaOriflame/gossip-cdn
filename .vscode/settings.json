@@ -1,5 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./cdn_node/nodes"
-    ]
-}

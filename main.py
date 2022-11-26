@@ -1,15 +1,6 @@
-import sys
-from signal import Signals, SIGINT, signal
-from time import sleep
-from nodes.bootstrap_node import BootstrapNode
 from nodes.cdn_node import CdnNode
+from argparse import ArgumentParser
 
-node = None
-
-def interruption_handler(sig: Signals, frame) -> None:
-    print("Interrupted")
-    node.dispose()
-    sys.exit(0)
 
 # TODO:
 # Определить входные аргументы аргументы (не помню, что там за библиотека была):
@@ -21,11 +12,28 @@ def interruption_handler(sig: Signals, frame) -> None:
 # Возможно, следует сделать этот параметр опциональным, но нужно будет написать код,
 # который на другом хостинге сможет понять свой адрес
 
-if __name__ == "__main__":
-    signal(SIGINT, interruption_handler)
+def parse_args():
+    parser = ArgumentParser()
 
-    bootstrap = BootstrapNode("127.0.0.1", "7700")
-    node = CdnNode(bootstrap, "127.0.0.1", "7701")
-    node.start()
-    while(True):
-        sleep(2)
+    parser.add_argument('host', type=str, default='localhost')
+    parser.add_argument('port', type=int, default=3228)
+    parser.add_argument('--nb-host', type=str, default=None)
+    parser.add_argument('--nb-port', type=int, default=-1)
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    neighbour_addr = None
+
+    if args.nb_host and args.nb_port > 0:
+        neighbour_addr = (args.nb_host, args.nb_port)
+    
+    node = CdnNode(args.host, args.port, neighbour_addr=neighbour_addr)
+    try:
+        node.start()
+    except KeyboardInterrupt:
+        node.stop()
+
+if __name__ == '__main__':
+    main()
