@@ -1,9 +1,10 @@
 import socket
 from threading import Thread
+import select
 from nodes.bootstrap_node import BootstrapNode
 from nodes.node import Node, Address, Connection
 from nodes.merkle_tree import MerkleTree
-from typing import Optional, List, Callable
+from typing import Optional, List
 
 class CdnNode(Node, Thread):
     def __init__(
@@ -18,8 +19,10 @@ class CdnNode(Node, Thread):
         self._bootstrap_node = BootstrapNode('localhost', 3333)
         self._neighbours: List[Address] = None
         self._updater: Thread = None
-        
-    def _handle_new_data(self, data: bytes, sender: socket.socket):
+        self._listener_connection: Connection = None
+        self._share_connection: Connection = None
+    
+    def _process_data(self, data: bytes, sender: socket.socket):
         print(data)
         data_str = data.decode('utf-8')
 
@@ -27,38 +30,53 @@ class CdnNode(Node, Thread):
         if 'I\'m' in data_str:
             ip, port = data_str.split(' ')[1].split(':')
             port = int(port)
-            self._curr_communication_node = (sender, (ip, port))
-
+                
     def _handle_new_connection(self, connection: Connection):
         print('New connection', connection[1])
-    
+        timeout = 1
+        # Слушаем кого-то
+        while not self._stop_event.is_set():
+            rd_sockets, _, _ = select.select([connection[0]], [], [], timeout)
+            # Весь процесс взаимодействия: отпправка и получение данных
+            for rd_socket in rd_sockets:
+                data = rd_socket.recv(1024)
+
+                if not data:
+                    print(f'Receiving data from {connection[1]} ended up')
+                    return
+
+                print(data)
+
     def _choose_neighbour(self) -> Address:
-        return [nb for nb in self._neighbours if nb != (self._ip, self._port)][0]
+        return tuple([nb for nb in self._neighbours if nb != (self._ip, self._port)][0])
     
-    def _try_create_curr_neighbour(self):
-        neighbour_to_send_addr = self._choose_neighbour()   
+    def _connect_to_neighbour(self, addr: Address) -> Connection:  
         nb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            nb_socket.connect(neighbour_to_send_addr)
-            nb_socket.sendall(f'I\'m {self._ip}:{self._port}'.encode('utf-8'))
-            self._curr_communication_node = (nb_socket, neighbour_to_send_addr)
-        except:
-            print(f'Failed to connect to {neighbour_to_send_addr}')
+        nb_socket.connect(addr)
+        nb_socket.sendall(f'I\'m {self._ip}:{self._port}'.encode('utf-8'))
+        
+        return (nb_socket, addr)
 
     def _updater_func(self):
         while not self._stop_event.is_set():
             self._stop_event.wait(timeout=self._update_timeout)
-            if not self._curr_communication_node:
-                self._try_create_curr_neighbour()
+            neighbour_addr = self._choose_neighbour() 
+            try:
+                neighbour = self._connect_to_neighbour(neighbour_addr)
+            except ConnectionError:
+                print(f'Failed to connect to neighbour {neighbour_addr}. Trying again...')
                 continue
             
-            try:
-                self._curr_communication_node[0] \
-                    .sendall(f'Some data from {self._ip}:{self._port}' \
-                    .encode('utf-8'))
-
-            except Exception:
-                self._curr_communication_node = None
+            # Делимся информацией 
+            while not self._stop_event.is_set():
+                try:
+                    # Весь процесс как мы делимся инфой: отправка данных, получение данных
+                    neighbour[0].sendall(f'Some data from {self._ip}:{self._port}'.encode('utf-8'))
+                except ConnectionError as err:
+                    print(f'Some error occured during sharing data: {err}')
+                    break
+                finally:
+                    self._stop_event.wait(timeout=1)
     
     def _initialize(self):
         super()._initialize()
@@ -70,16 +88,14 @@ class CdnNode(Node, Thread):
         # self.spreader = GossipSpreader(neighbours)
         self._initialize()
         #TODO: Add gossipSpreader
-        self._new_data_handler.start()
         self._new_connections_handler.start()
         self._updater.start()
 
         while not self._stop_event.is_set():
             self._stop_event.wait(self._stop_timeout)
         
-        self._new_data_handler.join()
         self._new_connections_handler.join()
         self._updater.join()
 
-    def dispose(self) -> None:
-        self.spreader.dispose()
+    # def dispose(self) -> None:
+    #     self.spreader.dispose()
