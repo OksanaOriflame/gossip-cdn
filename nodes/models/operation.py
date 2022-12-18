@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 
@@ -8,9 +8,19 @@ class Operation(Enum):
     MODIFY = "modify"
     REMOVE = "remove"
 
-
 class Op(BaseModel):
-    op: Operation
-    name: str
-    data: Optional[bytes] = None
-    hash: Optional[str] = None
+    operation: Operation
+    file_name: str
+
+class AddOp(Op):
+    operation = Operation.ADD
+    data: bytes
+
+class ModifyOp(Op):
+    operation = Operation.MODIFY
+    hash: str
+    data: bytes
+
+class RemoveOp(Op):
+    operation = Operation.REMOVE
+    hash: str

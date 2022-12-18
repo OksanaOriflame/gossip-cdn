@@ -4,8 +4,8 @@ import select
 from nodes.bootstrap_node import BootstrapNode
 from nodes.node import Node, Address, Connection
 from typing import Optional, List
-from nodes.models.queries import UpdatePageRequest
-from nodes.models.operation import Op, Operation
+from nodes.models.queries import UpdatePageRequest, Meta
+from nodes.models.operation import AddOp, RemoveOp, ModifyOp
 
 class CdnNode(Node, Thread):
     def __init__(
@@ -33,10 +33,10 @@ class CdnNode(Node, Thread):
             ip, port = data_str.split(' ')[1].split(':')
             port = int(port)
                 
+    # Слушаем кого-то
     def _handle_new_connection(self, connection: Connection):
         print('New connection', connection[1])
         timeout = 1
-        # Слушаем кого-то
         while not self._stop_event.is_set():
             rd_sockets, _, _ = select.select([connection[0]], [], [], timeout)
             # Весь процесс взаимодействия: отпправка и получение данных
@@ -63,6 +63,7 @@ class CdnNode(Node, Thread):
         
         return (nb_socket, addr)
 
+    # Делимся информацией 
     def _updater_func(self):
         while not self._stop_event.is_set():
             self._stop_event.wait(timeout=self._update_timeout)
@@ -74,8 +75,17 @@ class CdnNode(Node, Thread):
                 continue
             
             print(f'Connected to {neighbour_addr}')
-            # Делимся информацией 
-            upd_page_req = UpdatePageRequest(id="id1", prev_version="hash1", hash="hash2", patches=[Op(op=Operation.ADD, name="index.html", data=b'some data')])
+            upd_page_req = UpdatePageRequest(
+                page_id="id1", 
+                prev_version="hash1", 
+                operations=[
+                    AddOp(file_name="index.html", data=b'some data'),
+                    RemoveOp(file_name="hello.html", hash="hash3"),
+                    ModifyOp(file_name="hello", hash="hash4", data=b'some data 2')
+                ],
+                root_hash="root_hash",
+                meta=Meta(page_id="id2", page_name="name2"))
+            
             while not self._stop_event.is_set():
                 try:
                     # Весь процесс как мы делимся инфой: отправка данных, получение данных
