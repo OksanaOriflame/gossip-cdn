@@ -12,5 +12,5 @@ class Operation(Enum):
 class Op(BaseModel):
     op: Operation
     name: str
-    data: Optional[bytes]
-    hash: Optional[str]
+    data: Optional[bytes] = None
+    hash: Optional[str] = None

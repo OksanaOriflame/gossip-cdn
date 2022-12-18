@@ -6,6 +6,7 @@ from nodes.node import Node, Address, Connection
 from ..merkle_tree.merkle_tree import MerkleTree
 from typing import Optional, List
 from nodes.models.queries import UpdatePageRequest
+from nodes.models.operation import Op, Operation
 
 class CdnNode(Node, Thread):
     def __init__(
@@ -47,8 +48,12 @@ class CdnNode(Node, Thread):
                 if not data:
                     print(f'Receiving data from {connection[1]} ended up')
                     return
-
-                print(data)
+                data_str = data.decode('utf-8')
+                if "I\'m" in data_str:
+                    print(data_str)
+                    continue
+            
+                print(UpdatePageRequest.parse_raw(data_str))
 
     def _choose_neighbour(self) -> Address:
         return tuple([nb for nb in self._neighbours if nb != (self._ip, self._port)][0])
@@ -72,11 +77,11 @@ class CdnNode(Node, Thread):
             
             print(f'Connected to {neighbour_addr}')
             # Делимся информацией 
-            upd_page_req = UpdatePageRequest(id="id1")
+            upd_page_req = UpdatePageRequest(id="id1", prev_version="hash1", hash="hash2", patches=[Op(op=Operation.ADD, name="index.html", data=b'some data')])
             while not self._stop_event.is_set():
                 try:
                     # Весь процесс как мы делимся инфой: отправка данных, получение данных
-                    neighbour[0].sendall(f'Some data from {self._ip}:{self._port}'.encode('utf-8'))
+                    neighbour[0].sendall(upd_page_req.json().encode('utf-8'))
                 except ConnectionError as err:
                     print(f'Some error occured during sharing data: {err}')
                     break
