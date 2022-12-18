@@ -1,5 +1,7 @@
 import os
 
+from nodes.models.queries import UpdatePageRequest
+
 from ..Pages.page import Page
 
 
@@ -11,6 +13,10 @@ class PageVersionRepository:
             os.mkdir(versions_dir)
         self.versions_dir = versions_dir
 
-    
-    def commit(self, operations):
+    def _init_commit(self, operations: UpdatePageRequest):
         
+        pass
+
+    def commit(self, operations: UpdatePageRequest):
+        
+        pass
