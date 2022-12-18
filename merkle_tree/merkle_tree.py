@@ -1,6 +1,5 @@
 from typing import List
 from .hasher import Hasher
-from .Pages.page import Page
 from .tree_nodes.merkle_node import MerkleNode
 from .tree_nodes.merkle_leaf import MerkleLeaf
 
@@ -8,15 +7,15 @@ from .tree_nodes.merkle_leaf import MerkleLeaf
 BuildUnit = str
 
 class MerkleTree:
-    def __init__(self, page: Page):
+    def __init__(self, page):
         self.page = page
-        self.root_node = None
-        self.leafs = []
+        self.root_node: MerkleNode = None
+        self.leafs: List[MerkleLeaf] = []
 
     def build(self):
         files = self.page.files
         for file in files:
-            leaf = MerkleLeaf(file.hash, file.name)
+            leaf = MerkleLeaf(file.hash, file.location)
             self.leafs.append(leaf)
         self.root_node = self._build_tree(self.leafs)
         

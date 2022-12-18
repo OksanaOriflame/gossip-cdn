@@ -10,5 +10,12 @@ class MerkleLeaf(MerkleNode):
     def is_leaf(super):
         return True
 
+    def to_dict(self):
+        return {
+            "hash": self.hash,
+            "is_leaf": self.is_leaf(),
+            "file_name": self.file_name
+        }
+
     def __repr__(self) -> str:
-        return json.dumps(json.loads(f'{{"hash":"{self.hash}", "is_leaf":"{self.is_leaf()}", "file_name":"{self.file_name}"}}'), indent=4)
+        return json.dumps(self.to_dict(), indent=4)

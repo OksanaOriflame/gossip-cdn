@@ -10,15 +10,23 @@ class MerkleNode:
     def is_leaf(self):
         return False
 
-    def __repr__(self) -> str:
+    def to_dict(self):
         if not self.left:
             left = "null"
         else:
-            left = self.left
+            left = self.left.to_dict()
 
         if not self.right:
             right = "null"
         else:
-            right = self.right
-          
-        return json.dumps(json.loads(f'{{"hash":"{self.hash}", "is_leaf":"{self.is_leaf()}", "left":{left}, "right":{right}}}'), indent=4)
+            right = self.right.to_dict()
+
+        return {
+            "hash": self.hash,
+            "is_leaf": self.is_leaf(), 
+            "left":left,
+            "right":right
+        }
+
+    def __repr__(self) -> str:
+        return json.dumps(self.to_dict(), indent=4)
