@@ -1,5 +1,10 @@
+from merkle_tree.Pages.page_repository import PageRepository
+from merkle_tree.persistence.pages_updater import PagesUpdater
 from nodes.cdn_node import CdnNode
 from argparse import ArgumentParser
+from nodes.models.operation import AddOp
+
+from nodes.models.queries import Meta, UpdatePageRequest
 
 
 # TODO:
@@ -30,5 +35,22 @@ def main():
     except KeyboardInterrupt:
         node.stop()
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
+
+updater = PagesUpdater("C:/000/MM/DCS/gossip-cdn/cdn_data")
+
+
+
+id = "sukkkaaaa"
+meta = Meta(page_id=id, page_name="page333")
+ops = [
+    AddOp(file_name="index.txt", data="<script>Boooooooooba<script/>".encode("utf-8")),
+    AddOp(file_name="index.css", data="{\ndddsadasdasdasd:popa\n}".encode("utf-8"))
+]
+request = UpdatePageRequest(page_id=id, prev_version="none", root_hash="sdoihsglk", meta=meta, operations=ops)
+
+updater.update_page(request)
+
+for page in updater.page_repository.pages:
+    print(page.merkle_tree.versions[-1].root_node)

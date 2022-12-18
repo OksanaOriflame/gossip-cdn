@@ -1,3 +1,6 @@
+import json
+
+
 class MerkleNode:
     def __init__(self, hash: str, left, right) -> None:
         self.hash = hash
@@ -7,5 +10,23 @@ class MerkleNode:
     def is_leaf(self):
         return False
 
+    def to_dict(self):
+        if not self.left:
+            left = "null"
+        else:
+            left = self.left.to_dict()
+
+        if not self.right:
+            right = "null"
+        else:
+            right = self.right.to_dict()
+
+        return {
+            "hash": self.hash,
+            "is_leaf": self.is_leaf(), 
+            "left":left,
+            "right":right
+        }
+
     def __repr__(self) -> str:
-        return f"hash:{self.hash}\nis_leaf={self.is_leaf()}\n\n{self.left}\n\n{self.right}"
+        return json.dumps(self.to_dict(), indent=4)

@@ -3,12 +3,9 @@ from threading import Thread
 import select
 from nodes.bootstrap_node import BootstrapNode
 from nodes.node import Node, Address, Connection
-from nodes.merkle_tree import MerkleTree
 from typing import Optional, List
 from nodes.models.queries import UpdatePageRequest, Meta
 from nodes.models.operation import AddOp, RemoveOp, ModifyOp
-from nodes.node import Node, Address
-from merkle_tree.merkle_tree import MerkleTree
 
 class CdnNode(Node, Thread):
     def __init__(
@@ -19,7 +16,6 @@ class CdnNode(Node, Thread):
         web_folder: Optional[str] = None
     ):
         super().__init__(ip, port)
-        self._merkle_tree = MerkleTree()
         self._update_timeout = 2
         self._bootstrap_node = BootstrapNode('localhost', 3333)
         self._neighbours: List[Address] = None
