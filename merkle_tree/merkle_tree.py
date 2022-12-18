@@ -17,6 +17,7 @@ class MerkleTree:
         for file in files:
             leaf = MerkleLeaf(file.hash, file.location)
             self.leafs.append(leaf)
+        self.leafs.sort(lambda x: x.hash)
         self.root_node = self._build_tree(self.leafs)
         
     def _build_tree(self, nodes: List[MerkleNode]) -> MerkleNode:
