@@ -9,18 +9,18 @@ class Operation(Enum):
     REMOVE = "remove"
 
 class Op(BaseModel):
-    op: Operation
-    name: str
+    operation: Operation
+    file_name: str
 
 class AddOp(Op):
-    op = Operation.ADD
+    operation = Operation.ADD
     data: bytes
 
 class ModifyOp(Op):
-    op = Operation.MODIFY
+    operation = Operation.MODIFY
     hash: str
     data: bytes
 
 class RemoveOp(Op):
-    op = Operation.REMOVE
+    operation = Operation.REMOVE
     hash: str

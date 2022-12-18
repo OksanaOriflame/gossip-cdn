@@ -78,16 +78,15 @@ class CdnNode(Node, Thread):
             
             print(f'Connected to {neighbour_addr}')
             upd_page_req = UpdatePageRequest(
-                id="id1", 
+                page_id="id1", 
                 prev_version="hash1", 
-                hash="hash2", 
-                patches=[
-                    AddOp(name="index.html", data=b'some data'),
-                    RemoveOp(name="hello.html", hash="hash3"),
-                    ModifyOp(name="hello", hash="hash4", data=b'some data 2')
+                operations=[
+                    AddOp(file_name="index.html", data=b'some data'),
+                    RemoveOp(file_name="hello.html", hash="hash3"),
+                    ModifyOp(file_name="hello", hash="hash4", data=b'some data 2')
                 ],
                 root_hash="root_hash",
-                meta=Meta(id="id2", name="name2"))
+                meta=Meta(page_id="id2", page_name="name2"))
             
             while not self._stop_event.is_set():
                 try:

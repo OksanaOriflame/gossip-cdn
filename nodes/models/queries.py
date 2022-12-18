@@ -4,7 +4,7 @@ from nodes.models.operation import AddOp, RemoveOp, ModifyOp
 from enum import Enum
 
 class BaseQuery(BaseModel):
-    id: str
+    page_id: str
 
 class GetPageVersionRequest(BaseQuery):
     pass
@@ -13,13 +13,12 @@ class GetPageVersionResponse(BaseQuery):
     version: str
 
 class Meta(BaseModel):
-    id: str
-    name: str
+    page_id: str
+    page_name: str
 
 class UpdatePageRequest(BaseQuery):
     prev_version: str
-    hash: str
-    patches: List[Union[AddOp, RemoveOp, ModifyOp]]
+    operations: List[Union[AddOp, RemoveOp, ModifyOp]]
     root_hash: str
     meta: Meta
 
