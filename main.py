@@ -17,19 +17,14 @@ def parse_args():
 
     parser.add_argument('host', type=str, default='localhost')
     parser.add_argument('port', type=int, default=3228)
-    parser.add_argument('--nb-host', type=str, default=None)
-    parser.add_argument('--nb-port', type=int, default=-1)
+    parser.add_argument('--is-sharing', action='store_true')
 
     return parser.parse_args()
 
 def main():
     args = parse_args()
-    neighbour_addr = None
-
-    if args.nb_host and args.nb_port > 0:
-        neighbour_addr = (args.nb_host, args.nb_port)
     
-    node = CdnNode(args.host, args.port)
+    node = CdnNode(args.host, args.port, args.is_sharing)
     try:
         node.start()
     except KeyboardInterrupt:

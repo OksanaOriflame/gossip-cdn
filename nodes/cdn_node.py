@@ -5,12 +5,14 @@ from nodes.bootstrap_node import BootstrapNode
 from nodes.node import Node, Address, Connection
 from nodes.merkle_tree import MerkleTree
 from typing import Optional, List
+from nodes.models.queries import UpdatePageRequest
 
 class CdnNode(Node, Thread):
     def __init__(
         self, 
         ip: str, 
         port: int, 
+        is_sharing: bool = True,
         web_folder: Optional[str] = None
     ):
         super().__init__(ip, port)
@@ -21,6 +23,7 @@ class CdnNode(Node, Thread):
         self._updater: Thread = None
         self._listener_connection: Connection = None
         self._share_connection: Connection = None
+        self._is_sharing = is_sharing
     
     def _process_data(self, data: bytes, sender: socket.socket):
         print(data)
@@ -67,7 +70,9 @@ class CdnNode(Node, Thread):
                 print(f'Failed to connect to neighbour {neighbour_addr}. Trying again...')
                 continue
             
+            print(f'Connected to {neighbour_addr}')
             # Делимся информацией 
+            upd_page_req = UpdatePageRequest(id="id1")
             while not self._stop_event.is_set():
                 try:
                     # Весь процесс как мы делимся инфой: отправка данных, получение данных
@@ -89,13 +94,15 @@ class CdnNode(Node, Thread):
         self._initialize()
         #TODO: Add gossipSpreader
         self._new_connections_handler.start()
-        self._updater.start()
+
+        #Пока только либо делимся, либо слушаем
+        if self._is_sharing:
+            self._updater.start()
 
         while not self._stop_event.is_set():
             self._stop_event.wait(self._stop_timeout)
         
         self._new_connections_handler.join()
-        self._updater.join()
 
-    # def dispose(self) -> None:
-    #     self.spreader.dispose()
+        if self._is_sharing:
+            self._updater.join()
