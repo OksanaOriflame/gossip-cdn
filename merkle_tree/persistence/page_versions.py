@@ -24,7 +24,7 @@ class PageVersions:
             "versions": [merkle_tree.root_node.hash]
         }
         versions_file = os.path.join(self.versions_dir, "versions.json")
-        with open(versions_file, 'w') as outfile:
+        with open(versions_file, 'w+') as outfile:
             json.dump(versions, outfile, indent=4)
     
     def _create_new_version_file(self, merkle_tree: MerkleTree):
@@ -33,7 +33,7 @@ class PageVersions:
             "leafs": new_version_leafs
         }
         version_file = os.path.join(self.versions_dir, f"{merkle_tree.root_node.hash}.version.json")
-        with open(version_file, 'w') as outfile:
+        with open(version_file, 'w+') as outfile:
             json.dump(new_version, outfile, indent=4)
         
     def _commit_leafs(self, merkle_tree: MerkleTree):
