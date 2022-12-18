@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from typing import List
-from nodes.models.operation import Op
+from typing import List, Union
+from nodes.models.operation import AddOp, RemoveOp, ModifyOp
 from enum import Enum
 
 class BaseQuery(BaseModel):
@@ -19,7 +19,7 @@ class Meta(BaseModel):
 class UpdatePageRequest(BaseQuery):
     prev_version: str
     hash: str
-    patches: List[Op]
+    patches: List[Union[AddOp, RemoveOp, ModifyOp]]
     root_hash: str
     meta: Meta
 
