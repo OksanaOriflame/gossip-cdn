@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Union
+from typing import List, Optional, Union
 from nodes.models.operation import AddOp, RemoveOp, ModifyOp
 from enum import Enum
 
@@ -10,7 +10,7 @@ class GetPageVersionRequest(BaseQuery):
     pass
 
 class GetPageVersionResponse(BaseQuery):
-    version: str
+    version: Optional[str] = None
 
 class Meta(BaseModel):
     page_id: str

@@ -20,10 +20,10 @@ class PagesUpdater:
         return self._update_page(request)
 
     def get_random_page_id(self) -> str:
-        pass
+        return 'page_id'
     
     def get_latest_version(self, request: GetPageVersionRequest) -> GetPageVersionResponse:
-        pass
+        return GetPageVersionResponse(page_id='page id mock', version='hash test')
 
     def get_next_version(self, page_id: str, current_version: str) -> Optional[UpdatePageRequest]:
         pass
