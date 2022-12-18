@@ -1,3 +1,5 @@
+from merkle_tree.Pages.page_repository import PageRepository
+from merkle_tree.merkle_tree import MerkleTree
 from nodes.cdn_node import CdnNode
 from argparse import ArgumentParser
 
@@ -35,5 +37,12 @@ def main():
     except KeyboardInterrupt:
         node.stop()
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
+
+repo = PageRepository("C:/000/MM/DCS/gossip-cdn/cdn_data")
+repo.initialize()
+for page in repo.pages:
+    mt = MerkleTree(page)
+    mt.build()
+    print(mt.root_node)
