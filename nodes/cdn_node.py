@@ -7,6 +7,8 @@ from nodes.merkle_tree import MerkleTree
 from typing import Optional, List
 from nodes.models.queries import UpdatePageRequest, Meta
 from nodes.models.operation import AddOp, RemoveOp, ModifyOp
+from nodes.node import Node, Address
+from merkle_tree.merkle_tree import MerkleTree
 
 class CdnNode(Node, Thread):
     def __init__(
