@@ -1,4 +1,5 @@
 import hashlib
+from typing import Union
 
 from .exceptions.null_node_exception import NullNodeException
 from .tree_nodes.merkle_node import MerkleNode
@@ -6,8 +7,10 @@ from .tree_nodes.merkle_node import MerkleNode
 
 class Hasher:
     @staticmethod
-    def get_hash(data: str):
-        return hashlib.sha256(data.encode()).hexdigest()
+    def get_hash(data: Union[str, bytes]):
+        if isinstance(data, str):
+            data = data.encode()
+        return hashlib.sha256(data).hexdigest()
 
     @staticmethod
     def concat_node_hashes(left: MerkleNode, right: MerkleNode):

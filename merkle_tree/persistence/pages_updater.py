@@ -15,8 +15,8 @@ class PagesUpdater(PagesUpdaterBase):
         return self._update_page(request)
 
     def get_random_page_id(self) -> str:
-        version_number = Random.randint(len(self.pages))
-        return self.pages.keys()[version_number]
+        version_number = Random().randint(0, len(self.pages) - 1)
+        return list(self.pages.keys())[version_number]
     
     def get_latest_version(self, request: GetPageVersionRequest) -> GetPageVersionResponse:
         page = self.pages.get(request.page_id)
@@ -34,7 +34,7 @@ class PagesUpdater(PagesUpdaterBase):
         versions = page.merkle_tree.versions
         prev_version = None
         next_version = None
-        for i in len(versions):
+        for i in range(len(versions)):
             version = versions[i]
             if version.root_node.hash == current_version and i != len(versions) - 1:
                 prev_version = versions[i].root_node.hash

@@ -1,5 +1,6 @@
 from glob import glob
 import os
+import shutil
 from typing import List
 from .page import Page
 
@@ -18,4 +19,14 @@ class PageRepository:
         meta_file = os.path.join(page_dir, "info.json")
         page = Page(meta_file, page_dir)
         page.build()
+        self.pages.append(page)
+    
+    def append_requested_page(self, page_dir: str, hash: str) -> str:
+        meta_file = os.path.join(page_dir, "info.json")
+        page = Page(meta_file, page_dir)
+        page.build()
+        if page.merkle_tree.get_last_version().root_node.hash != hash:
+            shutil.rmtree(page_dir)
+            del page
+            raise Exception
         self.pages.append(page)

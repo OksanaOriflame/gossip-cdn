@@ -22,6 +22,7 @@ class PersistentMerkleTree:
         return self.versions[-1]
     
     def create_new_version(self, merkle_tree: MerkleTree):
+        self.versions_repository.append_version(merkle_tree)
         self.versions.append(merkle_tree)
     
     def checkout(self, hash: str, build_directory: str):
@@ -38,5 +39,5 @@ class PersistentMerkleTree:
         
         for leaf in target_version.leafs:
             file_path = os.path.join(build_directory, leaf.file_name)
-            blob_path = os.path.join(self.versions_repository.directory, leaf.hash)
+            blob_path = os.path.join(self.versions_repository.versions_dir, leaf.hash)
             shutil.copy(blob_path, file_path)

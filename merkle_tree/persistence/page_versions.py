@@ -26,7 +26,7 @@ class PageVersions:
         new_file = os.path.join(self.versions_dir, hash)
         if os.path.isfile(new_file):
             return True, hash
-        with open(new_file, 'w+') as outfile:
+        with open(new_file, 'wb+') as outfile:
             outfile.write(file_data)
         return False, hash
     
@@ -34,6 +34,16 @@ class PageVersions:
         file_path = os.path.join(self.versions_dir, hash)
         if os.path.isfile(file_path):
             os.remove(file_path)
+
+    def append_version(self, tree: MerkleTree):
+        self._create_new_version_file(tree)
+
+        versions_file = os.path.join(self.versions_dir, "versions.json")
+        with open(versions_file, "r") as outfile:
+            versions = json.load(outfile)
+        versions["versions"].append(tree.root_node.hash)
+        with open(versions_file, 'w+') as outfile:
+            json.dump(versions, outfile, indent=4)
     
     def _create_versions_file(self, merkle_tree: MerkleTree):
         versions = {

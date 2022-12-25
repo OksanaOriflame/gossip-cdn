@@ -33,10 +33,10 @@ class UpdateTransaction:
             self.page.merkle_tree.create_new_version(new_merkle_tree)
         except Exception as e:
             self._revert_changes()
-            return UpdatePageResponse(Status.ERROR)
+            return UpdatePageResponse(status=Status.ERROR)
         
         self.page.update_to_last_version()
-        return UpdatePageResponse(Status.ERROR)
+        return UpdatePageResponse(status=Status.OK)
     
     def _add(self, file_data: str, file_name: str):
         page = self.page

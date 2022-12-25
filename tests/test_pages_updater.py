@@ -15,7 +15,7 @@ from distutils.dir_util import copy_tree
 
 @pytest.fixture
 def cdn_dir() -> str:
-    return 'tests\\resources\\pages'
+    return os.path.join('tests', 'resources', 'pages')
 
 @pytest.fixture
 def page_meta() -> Meta:
@@ -39,24 +39,24 @@ def pages_updater(tmp_cdn_dir: str) -> PagesUpdater:
 
 def test_pages_updater(pages_updater: PagesUpdater, page_meta: Meta):
     assert len(pages_updater.page_repository.pages) == 1
-    assert pages_updater.get_random_page_id() == 'Not realized'
+    assert pages_updater.get_random_page_id() == 'index1'
 
-    get_page_version_request = GetPageVersionRequest(page_id="page_id_1")
-    assert pages_updater.get_latest_version(get_page_version_request) == GetPageVersionResponse(page_id='page id mock', version='hash test')
-    assert pages_updater.get_next_version("page_id", "version_hash") == None
+    get_page_version_request = GetPageVersionRequest(page_id="index1")
+    assert pages_updater.get_latest_version(get_page_version_request) == GetPageVersionResponse(page_id='index1', version='875a81d690eb6209d4a8b987001110576f3c0b9ef111cdc369ddd3f1b8cb8d55')
+    assert pages_updater.get_next_version("index1", "875a81d690eb6209d4a8b987001110576f3c0b9ef111cdc369ddd3f1b8cb8d55") == None
     
     ops = [
         AddOp(file_name="index.txt", data="<script>Boooooooooba<script/>".encode("utf-8")),
         AddOp(file_name="index.css", data="{\ndddsadasdasdasd:popa\n}".encode("utf-8"))
     ]
-    request = UpdatePageRequest(page_id=page_meta.page_id, prev_version="none", root_hash="sdoihsglk", meta=page_meta, operations=ops)
+    request = UpdatePageRequest(page_id=page_meta.page_id, prev_version="none", root_hash="0d2a5e934fdf5e7ddc7e4d8deca1403a860b0420c395ef1d152732996ef4e529", meta=page_meta, operations=ops)
     response = pages_updater.update_page(request)
-    assert response == None
+    assert response.status == Status.OK
 
     request = UpdatePageRequest(
         page_id="index2",
         prev_version="none",
-        root_hash="sdoihsglk",
+        root_hash="91996a603a41092f7ab38dac8c20a53d542173c76cd6b4afa65af9f3ae713024",
         meta=Meta(page_id="index2", page_name="index2"),
         operations=ops
     )

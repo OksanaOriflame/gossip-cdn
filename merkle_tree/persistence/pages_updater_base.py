@@ -3,6 +3,7 @@ import os
 from typing import Dict
 from merkle_tree.Pages.page import Page
 from merkle_tree.Pages.page_repository import PageRepository
+from merkle_tree.persistence.persistent_merkle_tree import PersistentMerkleTree
 from merkle_tree.persistence.update_transaction import UpdateTransaction
 from nodes.models.operation import AddOp
 from nodes.models.queries import Status, UpdatePageRequest, UpdatePageResponse
@@ -12,7 +13,7 @@ class PagesUpdaterBase:
     def __init__(self, cdn_node_directory: str) -> None:
         page_repository = PageRepository(cdn_node_directory)
         page_repository.build()
-        self.pages: Dict[str, Page] = {x.merkle_tree.pageId: x.merkle_tree for x in page_repository.pages}
+        self.pages: Dict[str, Page] = {x.merkle_tree.pageId: x for x in page_repository.pages}
         self.page_repository = page_repository
     
     def _create_page(self, request: UpdatePageRequest) -> UpdatePageResponse:
@@ -33,7 +34,10 @@ class PagesUpdaterBase:
             with open(file_location, "w+") as output_file:
                 output_file.write(op.data.decode("utf-8"))
         
-        repo.append(dir_name)
+        try:
+            repo.append_requested_page(dir_name, request.root_hash)
+        except Exception as e:
+            return UpdatePageResponse(status=Status.ERROR)
         return UpdatePageResponse(status=Status.OK)
 
     def _update_page(self, operations: UpdatePageRequest) -> UpdatePageResponse:
