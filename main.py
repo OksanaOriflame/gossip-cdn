@@ -23,34 +23,35 @@ def parse_args():
     parser.add_argument('host', type=str, default='localhost')
     parser.add_argument('port', type=int, default=3228)
     parser.add_argument('--is-sharing', action='store_true')
+    parser.add_argument('--cdn-folder', type=str, default='C:\\Users\\Даниил\\Desktop\\gossip-cdn\\cdn_data')
 
     return parser.parse_args()
 
 def main():
     args = parse_args()
-    
-    node = CdnNode(args.host, args.port, args.is_sharing)
+    pages_updater = PagesUpdater(args.cdn_folder)
+    node = CdnNode(args.host, args.port, pages_updater, args.is_sharing)
     try:
         node.start()
     except KeyboardInterrupt:
         node.stop()
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
 
-updater = PagesUpdater("C:/000/MM/DCS/gossip-cdn/cdn_data")
+# updater = PagesUpdater("C:/000/MM/DCS/gossip-cdn/cdn_data")
 
 
 
-id = "sukkkaaaa"
-meta = Meta(page_id=id, page_name="page333")
-ops = [
-    AddOp(file_name="index.txt", data="<script>Boooooooooba<script/>".encode("utf-8")),
-    AddOp(file_name="index.css", data="{\ndddsadasdasdasd:popa\n}".encode("utf-8"))
-]
-request = UpdatePageRequest(page_id=id, prev_version="none", root_hash="sdoihsglk", meta=meta, operations=ops)
+# id = "sukkkaaaa"
+# meta = Meta(page_id=id, page_name="page333")
+# ops = [
+#     AddOp(file_name="index.txt", data="<script>Boooooooooba<script/>".encode("utf-8")),
+#     AddOp(file_name="index.css", data="{\ndddsadasdasdasd:popa\n}".encode("utf-8"))
+# ]
+# request = UpdatePageRequest(page_id=id, prev_version="none", root_hash="sdoihsglk", meta=meta, operations=ops)
 
-updater.update_page(request)
+# updater.update_page(request)
 
-for page in updater.page_repository.pages:
-    print(page.merkle_tree.versions[-1].root_node)
+# for page in updater.page_repository.pages:
+#     print(page.merkle_tree.versions[-1].root_node)
