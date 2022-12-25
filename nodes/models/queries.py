@@ -24,6 +24,7 @@ class UpdatePageRequest(BaseQuery):
 
 class Status(Enum):
     OK = 'ok'
+    ERROR = 'error'
 
 class UpdatePageResponse(BaseModel):
     status: Status

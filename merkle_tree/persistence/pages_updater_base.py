@@ -3,6 +3,7 @@ import os
 from typing import Dict
 from merkle_tree.Pages.page import Page
 from merkle_tree.Pages.page_repository import PageRepository
+from merkle_tree.persistence.update_transaction import UpdateTransaction
 from nodes.models.operation import AddOp
 from nodes.models.queries import Status, UpdatePageRequest, UpdatePageResponse
 
@@ -36,8 +37,9 @@ class PagesUpdaterBase:
         return UpdatePageResponse(status=Status.OK)
 
     def _update_page(self, operations: UpdatePageRequest) -> UpdatePageResponse:
-        
-        pass
+        page = self.pages[operations.page_id]
+        update_transaction = UpdateTransaction(page, operations)
+        return update_transaction.apply()
 
     def _get_update_operations(self, prev_version_hash: str, next_version_hash: str) -> UpdatePageRequest:
         

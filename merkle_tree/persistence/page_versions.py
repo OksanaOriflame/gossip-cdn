@@ -1,6 +1,8 @@
 import json
 import os
 import shutil
+from typing import Optional, Tuple
+from merkle_tree.hasher import Hasher
 from merkle_tree.merkle_tree import MerkleTree
 
 from nodes.models.queries import UpdatePageRequest
@@ -18,6 +20,20 @@ class PageVersions:
         self._create_versions_file(merkle_tree)
         self._create_new_version_file(merkle_tree)
         self._commit_leafs(merkle_tree)
+    
+    def add_file(self, file_data) -> Tuple[bool, str]:
+        hash = Hasher.get_hash(file_data)
+        new_file = os.path.join(self.versions_dir, hash)
+        if os.path.isfile(new_file):
+            return True, hash
+        with open(new_file, 'w+') as outfile:
+            outfile.write(file_data)
+        return False, hash
+    
+    def remove_file(self, hash) -> None:
+        file_path = os.path.join(self.versions_dir, hash)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
     
     def _create_versions_file(self, merkle_tree: MerkleTree):
         versions = {
