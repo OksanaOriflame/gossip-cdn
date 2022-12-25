@@ -28,7 +28,7 @@ class Page:
         self.id = metainfo["id"]
         self.name = metainfo["name"]
         self._fill_files()
-        self.merkle_tree = PersistentMerkleTree(self, self.id, self.directory)
+        self.merkle_tree = PersistentMerkleTree(self.files, self.id, self.directory)
     
     def validate(self) -> None:
         if self._metainfo is None:
@@ -49,3 +49,7 @@ class Page:
     
     def get_files(self) -> List[PageFile]:
         return self.files
+    
+    def update_to_last_version(self):
+        last_version_hash = self.merkle_tree.get_last_version().root_node.hash
+        self.merkle_tree.checkout(last_version_hash, self.directory)
