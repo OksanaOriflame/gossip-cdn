@@ -1,15 +1,11 @@
 from typing import List
 from nodes.node import Node, Address
-import socket
 from nodes.node import Connection
 
 class BootstrapNode(Node):
     def __init__(self, ip: str, port: str) -> None:
         super().__init__(ip, port)
         self.nodes = None
-    
-    def _handle_new_data(self, data: bytes, sender: socket.socket):
-        pass
 
     def _handle_new_connection(self, connection: Connection):
         pass

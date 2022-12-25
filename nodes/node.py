@@ -40,6 +40,7 @@ class Node(BaseNode, ABC):
     def _initialize(self):
         self._server_socket.bind((self._ip, self._port))
         self._server_socket.listen(1)
+        # To use ctrl + c and can stop node
         self._server_socket.setblocking(0)
         self._new_connections_handler = Thread(target=self._new_connections_reciver)
     

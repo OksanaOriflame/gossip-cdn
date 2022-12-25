@@ -4,9 +4,8 @@ import select
 from merkle_tree.persistence.pages_updater import PagesUpdater
 from nodes.bootstrap_node import BootstrapNode
 from nodes.node import Node, Address, Connection
-from typing import Optional, List
-from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse, UpdatePageRequest, Meta
-from nodes.models.operation import AddOp, RemoveOp, ModifyOp
+from typing import List
+from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse
 
 class CdnNode(Node, Thread):
     def __init__(
@@ -21,25 +20,15 @@ class CdnNode(Node, Thread):
         self._bootstrap_node = BootstrapNode('localhost', 3333)
         self._neighbours: List[Address] = None
         self._updater: Thread = None
-        self._listener_connection: Connection = None
-        self._share_connection: Connection = None
         self._is_sharing = is_sharing
         self._pages_updater = pages_updater
     
-    def _process_data(self, data: bytes, sender: socket.socket):
-        print(data)
-        data_str = data.decode('utf-8')
-
-        #Впервые общается с этим соседом
-        if 'I\'m' in data_str:
-            ip, port = data_str.split(' ')[1].split(':')
-            port = int(port)
-                
     # Слушаем кого-то
     def _handle_new_connection(self, connection: Connection):
         pages_updater = self._pages_updater
         print('New connection', connection[1])
         timeout = 1
+        
         while not self._stop_event.is_set():
             rd_sockets, _, _ = select.select([connection[0]], [], [], timeout)
             # Весь процесс взаимодействия: отпправка и получение данных
@@ -51,7 +40,8 @@ class CdnNode(Node, Thread):
                     return
                 data_str = data.decode('utf-8')
 
-                try:
+                print(data_str)
+                try:    
                     request = GetPageVersionRequest.parse_raw(data_str)
                     version = pages_updater.get_latest_version(request)
                     rd_socket.sendall(version.json().encode('utf-8'))
@@ -61,44 +51,46 @@ class CdnNode(Node, Thread):
     def _choose_neighbour(self) -> Address:
         return tuple([nb for nb in self._neighbours if nb != (self._ip, self._port)][0])
     
-    def _connect_to_neighbour(self, addr: Address) -> Connection:  
+    def _connect_to_addr(self, addr: Address) -> Connection:  
         nb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         nb_socket.connect(addr)
         
         return (nb_socket, addr)
 
+    def _share_with_neighbour(self, neighbour: Connection):
+        pages_updater = self._pages_updater
+        page_id = pages_updater.get_random_page_id()
+        request = GetPageVersionRequest(page_id=page_id)
+        neighbour[0].sendall(request.json().encode('utf-8'))
+
+        data = neighbour[0].recv(1024)
+        page_version_response = GetPageVersionResponse.parse_raw(data.decode('utf-8'))
+        next_version = pages_updater.get_next_version(
+            page_id=page_version_response.page_id,
+            current_version=page_version_response.version
+        )
+        print(next_version)
+    
     # Делимся информацией 
     def _updater_func(self):
-        pages_updater = self._pages_updater
         while not self._stop_event.is_set():
             self._stop_event.wait(timeout=self._update_timeout)
             neighbour_addr = self._choose_neighbour() 
             try:
-                neighbour = self._connect_to_neighbour(neighbour_addr)
+                neighbour = self._connect_to_addr(neighbour_addr)
             except ConnectionError:
                 print(f'Failed to connect to neighbour {neighbour_addr}. Trying again...')
                 continue
             
             print(f'Connected to {neighbour_addr}')
             
-            while not self._stop_event.is_set():
-                try:
-                    page_id = pages_updater.get_random_page_id()
-                    request = GetPageVersionRequest(page_id=page_id)
-                    neighbour[0].sendall(request.json().encode('utf-8'))
-
-                    data = neighbour[0].recv(1024)
-                    page_version_response = GetPageVersionResponse.parse_raw(data.decode('utf-8'))
-                    next_version = pages_updater.get_next_version(
-                        page_id=page_version_response.page_id,
-                        current_version=page_version_response.version
-                    )
-                    print(next_version)
-                except ConnectionError as err:
-                    print(f'Some error occured during sharing data: {err}')
-                    break
-                finally:
-                    self._stop_event.wait(timeout=1)
+            try:
+                self._share_with_neighbour(neighbour)
+            except ConnectionError as err:
+                print(f'Some error occured during sharing data: {err}')
+                continue
+            finally:
+                self._stop_event.wait(timeout=1)
     
     def _initialize(self):
         super()._initialize()

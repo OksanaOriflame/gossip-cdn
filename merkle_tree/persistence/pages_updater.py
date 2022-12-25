@@ -5,7 +5,6 @@ from merkle_tree.Pages.page_repository import PageRepository
 from nodes.models.operation import AddOp
 from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse, Status, UpdatePageRequest, UpdatePageResponse
 
-
 class PagesUpdater:
     def __init__(self, cdn_node_directory: str) -> None:
         page_repository = PageRepository(cdn_node_directory)
@@ -20,7 +19,7 @@ class PagesUpdater:
         return self._update_page(request)
 
     def get_random_page_id(self) -> str:
-        return 'page_id'
+        return 'Not realized'
     
     def get_latest_version(self, request: GetPageVersionRequest) -> GetPageVersionResponse:
         return GetPageVersionResponse(page_id='page id mock', version='hash test')
