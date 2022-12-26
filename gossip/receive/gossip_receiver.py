@@ -1,0 +1,9 @@
+class GossipReceiver():
+    def __init__() -> None:
+        ...
+    
+    def start(self) -> None:
+        ...
+        
+    def dispose(self) -> None:
+        ...
