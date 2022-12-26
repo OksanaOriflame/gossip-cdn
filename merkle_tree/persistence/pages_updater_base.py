@@ -1,8 +1,8 @@
 import json
 import os
 from typing import Dict, List, Tuple
-from merkle_tree.Pages.page import Page
-from merkle_tree.Pages.page_repository import PageRepository
+from merkle_tree.pages.page import Page
+from merkle_tree.pages.page_repository import PageRepository
 from merkle_tree.persistence.update_transaction import UpdateTransaction
 from merkle_tree.tree_nodes.merkle_leaf import MerkleLeaf
 from nodes.models.operation import AddOp, ModifyOp, RemoveOp

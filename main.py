@@ -1,5 +1,5 @@
 import os
-from merkle_tree.Pages.page_repository import PageRepository
+from merkle_tree.pages.page_repository import PageRepository
 from merkle_tree.persistence.pages_updater import PagesUpdater
 from nodes.cdn_node import CdnNode
 from argparse import ArgumentParser
