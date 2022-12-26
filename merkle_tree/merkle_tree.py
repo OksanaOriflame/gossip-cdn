@@ -13,7 +13,7 @@ class MerkleTree:
         self.root_node: MerkleNode = None
         self.leafs: List[MerkleLeaf] = []
 
-    def build_from_files(self, files: PageFile):
+    def build_from_files(self, files: List[PageFile]):
         for file in files:
             leaf = MerkleLeaf(file.hash, file.location)
             self.leafs.append(leaf)

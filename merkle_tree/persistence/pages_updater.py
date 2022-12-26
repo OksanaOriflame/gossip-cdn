@@ -30,18 +30,9 @@ class PagesUpdater(PagesUpdaterBase):
         page = self.pages.get(page_id)
         if not page:
             raise FileNotFoundError(f"No {page_id} page")
-
-        versions = page.merkle_tree.versions
-        prev_version = None
-        next_version = None
-        for i in range(len(versions)):
-            version = versions[i]
-            if version.root_node.hash == current_version and i != len(versions) - 1:
-                prev_version = versions[i].root_node.hash
-                next_version = versions[i + 1].root_node.hash
-                break
         
+        next_version = page.merkle_tree.determine_next_version(current_version)
         if not next_version:
             return None
         
-        return self._get_update_operations(prev_version, next_version)
+        return self._get_update_operations(page, current_version, next_version)

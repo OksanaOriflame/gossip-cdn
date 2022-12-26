@@ -34,6 +34,13 @@ class PageVersions:
         file_path = os.path.join(self.versions_dir, hash)
         if os.path.isfile(file_path):
             os.remove(file_path)
+        
+    def get_file_content_bytes(self, hash: str) -> bytes:
+        file_location = os.path.join(self.versions_dir, hash)
+        if not os.path.isfile(file_location):
+            raise FileNotFoundError(f"No file {file_location}")
+        with open(file_location, "rb") as outfile:
+            return outfile.read()
 
     def append_version(self, tree: MerkleTree):
         self._create_new_version_file(tree)
@@ -64,7 +71,7 @@ class PageVersions:
         
     def _commit_leafs(self, merkle_tree: MerkleTree):
         for leaf in merkle_tree.leafs:
-            content_file_name = leaf.file_name
+            content_file_name = leaf.file_location
             blob_name = os.path.join(self.versions_dir, leaf.hash)
             shutil.copy(content_file_name, blob_name)
             
