@@ -1,6 +1,6 @@
 import copy
 from typing import List
-from merkle_tree.Pages.page import Page
+from merkle_tree.pages.page import Page
 from merkle_tree.merkle_tree import MerkleTree
 from merkle_tree.tree_nodes.merkle_leaf import MerkleLeaf
 from nodes.models.operation import AddOp, RemoveOp, ModifyOp
