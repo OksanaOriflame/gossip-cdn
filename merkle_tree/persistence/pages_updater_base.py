@@ -83,7 +83,7 @@ class PagesUpdaterBase:
         add_ops = self._to_add_ops(leafs_to_append, page)
         remove_ops = self._to_remove_ops(leafs_to_remove)
         modify_ops = self._to_modify_ops(same_names_leafs, page)
-        meta = Meta(page_id=page_id, page_name=page.name)
+        meta = Meta(page_id=page.id, page_name=page.name)
 
         return UpdatePageRequest(
             page_id=page.id, 
