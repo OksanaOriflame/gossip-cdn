@@ -1,10 +1,12 @@
 import json
+import os
 from .merkle_node import MerkleNode
 
 
 class MerkleLeaf(MerkleNode):
-    def __init__(self, hash: str, file_name: str) -> None:
-        self.file_name = file_name
+    def __init__(self, hash: str, file_location: str) -> None:
+        self.file_location = file_location
+        self.file_name = os.path.split()[1]
         super().__init__(hash, None, None)
     
     def is_leaf(super):
@@ -14,7 +16,7 @@ class MerkleLeaf(MerkleNode):
         return {
             "hash": self.hash,
             "is_leaf": self.is_leaf(),
-            "file_name": self.file_name
+            "file_name": self.file_location
         }
 
     def __repr__(self) -> str:

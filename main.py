@@ -1,3 +1,4 @@
+import os
 from merkle_tree.Pages.page_repository import PageRepository
 from merkle_tree.persistence.pages_updater import PagesUpdater
 from nodes.cdn_node import CdnNode
@@ -23,7 +24,7 @@ def parse_args():
     parser.add_argument('host', type=str, default='localhost')
     parser.add_argument('port', type=int, default=3228)
     parser.add_argument('--is-sharing', action='store_true')
-    parser.add_argument('--cdn-folder', type=str, default='C:\\Users\\Даниил\\Desktop\\gossip-cdn\\cdn_data')
+    parser.add_argument('--cdn-folder', type=str, default=os.path.join(os.getcwd(), "cdn_data"))
 
     return parser.parse_args()
 

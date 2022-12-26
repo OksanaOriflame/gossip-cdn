@@ -33,10 +33,10 @@ class UpdateTransaction:
             self.page.merkle_tree.create_new_version(new_merkle_tree)
         except Exception as e:
             self._revert_changes()
-            return UpdatePageResponse(Status.ERROR)
+            return UpdatePageResponse(status=Status.ERROR)
         
         self.page.update_to_last_version()
-        return UpdatePageResponse(Status.ERROR)
+        return UpdatePageResponse(status=Status.OK)
     
     def _add(self, file_data: str, file_name: str):
         page = self.page
@@ -48,10 +48,10 @@ class UpdateTransaction:
         leafs.append(new_leaf)
     
     def _remove(self, hash: str, file_name: str):
-        leafs_to_remove = list(filter(lambda x: x.hash == hash and x.file_name == file_name, self.leafs))
+        leafs_to_remove = list(filter(lambda x: x.hash == hash and x.file_location == file_name, self.leafs))
         if len(leafs_to_remove) != 1:
             raise Exception
-        self.leafs = list(filter(lambda x: x.hash != hash and x.file_name != file_name, self.leafs))
+        self.leafs = list(filter(lambda x: x.hash != hash and x.file_location != file_name, self.leafs))
     
     def _modify(self, file_data: str, hash: str, file_name: str):
         self._remove(hash, file_name)

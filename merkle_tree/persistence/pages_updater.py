@@ -15,8 +15,8 @@ class PagesUpdater(PagesUpdaterBase):
         return self._update_page(request)
 
     def get_random_page_id(self) -> str:
-        version_number = Random.randint(len(self.pages))
-        return self.pages.keys()[version_number]
+        version_number = Random().randint(0, len(self.pages) - 1)
+        return list(self.pages.keys())[version_number]
     
     def get_latest_version(self, request: GetPageVersionRequest) -> GetPageVersionResponse:
         page = self.pages.get(request.page_id)
@@ -30,18 +30,9 @@ class PagesUpdater(PagesUpdaterBase):
         page = self.pages.get(page_id)
         if not page:
             raise FileNotFoundError(f"No {page_id} page")
-
-        versions = page.merkle_tree.versions
-        prev_version = None
-        next_version = None
-        for i in len(versions):
-            version = versions[i]
-            if version.root_node.hash == current_version and i != len(versions) - 1:
-                prev_version = versions[i].root_node.hash
-                next_version = versions[i + 1].root_node.hash
-                break
         
+        next_version = page.merkle_tree.determine_next_version(current_version)
         if not next_version:
             return None
         
-        return self._get_update_operations(prev_version, next_version)
+        return self._get_update_operations(page, current_version, next_version)

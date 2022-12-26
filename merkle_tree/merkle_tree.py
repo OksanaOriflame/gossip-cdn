@@ -13,18 +13,18 @@ class MerkleTree:
         self.root_node: MerkleNode = None
         self.leafs: List[MerkleLeaf] = []
 
-    def build_from_files(self, files: PageFile):
+    def build_from_files(self, files: List[PageFile]):
         for file in files:
             leaf = MerkleLeaf(file.hash, file.location)
             self.leafs.append(leaf)
-        self.leafs.sort(lambda x: x.hash)
+        self.leafs.sort(key=lambda x: x.hash)
         self.root_node = self._build_tree(self.leafs)
     
     def build_from_leafs(self, leafs: List[MerkleLeaf]):
         self.leafs = leafs
-        self.leafs.sort(lambda x: x.hash)
+        self.leafs.sort(key=lambda x: x.hash)
         self.root_node = self._build_tree(self.leafs)
-        
+
     def _build_tree(self, nodes: List[MerkleNode]) -> MerkleNode:
         node_pairs = list()
         for i in range(0, len(nodes), 2):
