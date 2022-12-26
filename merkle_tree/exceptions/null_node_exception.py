@@ -1,2 +1,0 @@
-class NullNodeException(Exception):
-    pass

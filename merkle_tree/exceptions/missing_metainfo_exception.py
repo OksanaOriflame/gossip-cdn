@@ -1,2 +1,0 @@
-class MissingMetainfoException(Exception):
-    pass
