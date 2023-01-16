@@ -39,7 +39,7 @@ class BootstrapNode(Node):
         while not self._stop_event.is_set():
             self._stop_event.wait(1)
 
-            print(self._nodes)
+            print('Nodes: ', self._nodes.values())
             if not self._nodes:
                 continue
             
