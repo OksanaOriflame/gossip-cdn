@@ -7,6 +7,7 @@ from nodes.node import Node, Address, Connection
 from typing import List
 from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse, UpdatePageRequest
 from nodes.bootstrap_node import NodesState
+import random
 
 class CdnNode(Node):
     def __init__(
@@ -55,11 +56,10 @@ class CdnNode(Node):
             print('Some error occured while recieving data ', e)
 
     def _choose_neighbour(self) -> Address:
-        neighbours = [nb for nb in self._neighbours if nb != (self._ip, self._port)]
-        if not neighbours:
+        if not self._neighbours:
             return None
         
-        return neighbours[0]
+        return random.choice(self._neighbours)
     
     def _connect_to_addr(self, addr: Address) -> Connection:  
         nb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
