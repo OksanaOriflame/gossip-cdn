@@ -6,7 +6,7 @@ from nodes.bootstrap_node import BootstrapNode
 from nodes.node import Node, Address, Connection
 from typing import List
 from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse, UpdatePageRequest
-
+from nodes.bootstrap_node import NodesState
 
 class CdnNode(Node):
     def __init__(
@@ -14,15 +14,14 @@ class CdnNode(Node):
         ip: str, 
         port: int, 
         pages_updater: PagesUpdater,
-        is_sharing: bool = True
+        bootstrap_addr: Address
     ):
         super().__init__(ip, port)
         self._update_timeout = 2
-        self._bootstrap_node = BootstrapNode('localhost', 3333)
-        self._neighbours: List[Address] = None
+        self._neighbours: List[Address] = []
         self._updater: Thread = None
-        self._is_sharing = is_sharing
         self._pages_updater = pages_updater
+        self._bootstrap_addr = bootstrap_addr
     
     # Слушаем кого-то
     def _handle_new_connection(self, connection: Connection):
@@ -57,7 +56,11 @@ class CdnNode(Node):
             print('Some error occured while recieving data ', e)
 
     def _choose_neighbour(self) -> Address:
-        return tuple([nb for nb in self._neighbours if nb != (self._ip, self._port)][0])
+        neighbours = [nb for nb in self._neighbours if nb != (self._ip, self._port)]
+        if not neighbours:
+            return None
+        
+        return neighbours[0]
     
     def _connect_to_addr(self, addr: Address) -> Connection:  
         nb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -92,6 +95,10 @@ class CdnNode(Node):
         while not self._stop_event.is_set():
             self._stop_event.wait(timeout=self._update_timeout)
             neighbour_addr = self._choose_neighbour() 
+
+            if not neighbour_addr:
+                continue
+
             try:
                 neighbour = self._connect_to_addr(neighbour_addr)
             except ConnectionError:
@@ -108,14 +115,42 @@ class CdnNode(Node):
             finally:
                 self._stop_event.wait(timeout=1)
     
+    def _handle_bootstrap_node(self):
+        while not self._stop_event.is_set():
+            print('Trying to connect to bootstrap node')
+            try:
+                bootstrap_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                bootstrap_socket.connect(self._bootstrap_addr)
+                bootstrap_socket.sendall(f'{self._ip}:{self._port}'.encode('utf-8'))
+                print('Connected to bootstrap node')
+                break
+            except Exception:
+                pass
+            finally:
+                self._stop_event.wait(1)
+
+        while not self._stop_event.is_set():
+            rd_sockets, _, _ = select.select([bootstrap_socket], [], [], 5)
+
+            rd_socket = rd_sockets[0]
+            data = rd_socket.recv(1024)
+            if not data:
+                continue
+
+            nodes_state = NodesState.parse_raw(data.decode('utf-8'))
+            self._neighbours = nodes_state.neighbours
+            bootstrap_socket.sendall(b'alive')
+            self._stop_event.wait(1)
+
     def _initialize(self):
         super()._initialize()
-        self._neighbours = self._bootstrap_node.get_neighbours()
         self._updater = Thread(target=self._updater_func)
+        self._bootstrap_handler = Thread(target=self._handle_bootstrap_node)
     
     def start(self) -> None:
         self._initialize()
         self._new_connections_handler.start()
+        self._bootstrap_handler.start()
 
         #Пока только либо делимся, либо слушаем
         self._updater.start()
@@ -124,5 +159,5 @@ class CdnNode(Node):
             self._stop_event.wait(self._stop_timeout)
 
         self._new_connections_handler.join()
-
+        self._bootstrap_handler.join()
         self._updater.join()

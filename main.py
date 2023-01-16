@@ -19,7 +19,6 @@ def parse_args():
 
     parser.add_argument('host', type=str, default='localhost')
     parser.add_argument('port', type=int, default=3228)
-    parser.add_argument('--is-sharing', action='store_true')
     parser.add_argument('--cdn-folder', type=str, default=os.path.join(os.getcwd(), "cdn_data"))
 
     return parser.parse_args()
@@ -27,7 +26,7 @@ def parse_args():
 def main():
     args = parse_args()
     pages_updater = PagesUpdater(args.cdn_folder)
-    node = CdnNode(args.host, args.port, pages_updater, args.is_sharing)
+    node = CdnNode(args.host, args.port, pages_updater, ('localhost', 3333))
     try:
         node.start()
     except KeyboardInterrupt:
