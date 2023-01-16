@@ -8,12 +8,6 @@ from typing import List
 from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse, UpdatePageRequest
 
 
-_QUERIES_TYPES = [
-    GetPageVersionRequest,
-    GetPageVersionResponse,
-    UpdatePageRequest
-]
-
 class CdnNode(Node):
     def __init__(
         self, 
@@ -124,13 +118,11 @@ class CdnNode(Node):
         self._new_connections_handler.start()
 
         #Пока только либо делимся, либо слушаем
-        if self._is_sharing:
-            self._updater.start()
+        self._updater.start()
         
         while not self._stop_event.is_set():
             self._stop_event.wait(self._stop_timeout)
 
         self._new_connections_handler.join()
 
-        if self._is_sharing:
-            self._updater.join()
+        self._updater.join()
