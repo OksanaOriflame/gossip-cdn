@@ -32,14 +32,26 @@ class BootstrapNode(Node):
             print(e)
 
         with self._nodes_lock:
-            self._nodes[sock] = (addr[0], int(actual_port))
+            actual_addr = (addr[0], int(actual_port))
+
+            # Если такой адрес уже есть
+            nodes_to_remove = []
+            for node in self._nodes:
+                node_addr =  self._nodes[node]
+                if node_addr == actual_addr:
+                    nodes_to_remove.append(node)
+            
+            for node in nodes_to_remove:
+                self._nodes.pop(node)
+            
+            self._nodes[sock] = actual_addr
             print('New node = ', (addr[0], int(actual_port)))
     
     def _run(self):
         while not self._stop_event.is_set():
             self._stop_event.wait(1)
 
-            print('Nodes: ', self._nodes.values())
+            print('Nodes: ', list(self._nodes.values()))
             if not self._nodes:
                 continue
             
