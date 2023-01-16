@@ -1,9 +1,10 @@
 import json
 import os
 import shutil
-from typing import Optional, Tuple
+from typing import List, Tuple
 from merkle_tree.hasher import Hasher
 from merkle_tree.merkle_tree import MerkleTree
+from merkle_tree.tree_nodes.merkle_leaf import MerkleLeaf
 
 from nodes.models.queries import UpdatePageRequest
 
@@ -15,6 +16,23 @@ class PageVersions:
         if not os.path.isdir(versions_dir):
             os.mkdir(versions_dir)
         self.versions_dir = versions_dir
+    
+    def check_inited(self) -> List[MerkleTree]:
+        versions_file = os.path.join(self.versions_dir, "versions.json")
+        if not os.path.isfile(versions_file):
+            return []
+        with open(versions_file, "r") as outfile:
+            versions = json.load(outfile)
+        result: List[MerkleTree] = []
+        for version_hash in versions["versions"]:
+            version_file = os.path.join(self.versions_dir, f"{version_hash}.version.json")
+            with open(version_file, "r") as outfile:
+                version = json.load(outfile)
+            merkle_tree = MerkleTree()
+            merkle_leafs = list(map(lambda x: MerkleLeaf(x["hash"], x["file_name"]), version["leafs"]))
+            merkle_tree.build_from_leafs(merkle_leafs)
+            result.append(merkle_tree)
+        return result
 
     def init_commit(self, merkle_tree: MerkleTree):
         self._create_versions_file(merkle_tree)
@@ -51,6 +69,7 @@ class PageVersions:
         versions["versions"].append(tree.root_node.hash)
         with open(versions_file, 'w+') as outfile:
             json.dump(versions, outfile, indent=4)
+        print(f"Updated page version. New commit - {tree.root_node.hash}")
     
     def _create_versions_file(self, merkle_tree: MerkleTree):
         versions = {
