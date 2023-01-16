@@ -7,7 +7,14 @@ from nodes.node import Node, Address, Connection
 from typing import List
 from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse, UpdatePageRequest
 
-class CdnNode(Node, Thread):
+
+_QUERIES_TYPES = [
+    GetPageVersionRequest,
+    GetPageVersionResponse,
+    UpdatePageRequest
+]
+
+class CdnNode(Node):
     def __init__(
         self, 
         ip: str, 
@@ -27,30 +34,33 @@ class CdnNode(Node, Thread):
     def _handle_new_connection(self, connection: Connection):
         pages_updater = self._pages_updater
         print('New connection', connection[1])
-        timeout = 1
+        timeout = 3
         
-        while not self._stop_event.is_set():
-            rd_sockets, _, _ = select.select([connection[0]], [], [], timeout)
-            # Весь процесс взаимодействия: отпправка и получение данных
-            for rd_socket in rd_sockets:
-                data = rd_socket.recv(1024)
+        rd_sockets, _, _ = select.select([connection[0]], [], [], timeout)
+        rd_socket = rd_sockets[0]
+        data = rd_socket.recv(1024)
 
-                if not data:
-                    print(f'Receiving data from {connection[1]} ended up')
-                    return
-                data_str = data.decode('utf-8')
+        if not data:
+            print(f'Receiving data from {connection[1]} ended up')
+            return
+        
+        try:    
+            request = GetPageVersionRequest.parse_raw(data.decode('utf-8'))
+            version_response = pages_updater.get_latest_version(request)
+            rd_socket.sendall(version_response.json().encode('utf-8'))
+            rd_sockets, _, _ = select.select([rd_socket], [], [], timeout)
 
-                try:    
-                    request = GetPageVersionRequest.parse_raw(data_str)
-                    version_response = pages_updater.get_latest_version(request)
-                    rd_socket.sendall(version_response.json().encode('utf-8'))
-                    data = rd_socket.recv(1024)
-                    if data:
-                        update_page_request = UpdatePageRequest(data.decode('utf-8'))
-                        update_page_response = pages_updater.update_page(update_page_request)
-                        rd_socket.sendall(update_page_response.json().encode('utf-8'))
-                except Exception as e:
-                    print('Some error occured while recieving data ', e)
+            if not rd_sockets:
+                return
+            
+            rd_socket = rd_sockets[0]
+            data = rd_socket.recv(1024)
+            if data:
+                update_page_request = UpdatePageRequest(data.decode('utf-8'))
+                update_page_response = pages_updater.update_page(update_page_request)
+                rd_socket.sendall(update_page_response.json().encode('utf-8'))
+        except Exception as e:
+            print('Some error occured while recieving data ', e)
 
     def _choose_neighbour(self) -> Address:
         return tuple([nb for nb in self._neighbours if nb != (self._ip, self._port)][0])
@@ -110,19 +120,16 @@ class CdnNode(Node, Thread):
         self._updater = Thread(target=self._updater_func)
     
     def start(self) -> None:
-        # neighbours = self.bootstrap_node.get_nodes()
-        # self.spreader = GossipSpreader(neighbours)
         self._initialize()
-        #TODO: Add gossipSpreader
         self._new_connections_handler.start()
 
         #Пока только либо делимся, либо слушаем
         if self._is_sharing:
             self._updater.start()
-
+        
         while not self._stop_event.is_set():
             self._stop_event.wait(self._stop_timeout)
-        
+
         self._new_connections_handler.join()
 
         if self._is_sharing:
