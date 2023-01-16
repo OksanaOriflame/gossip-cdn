@@ -100,7 +100,7 @@ class CdnNode(Node):
 
             try:
                 neighbour = self._connect_to_addr(neighbour_addr)
-            except ConnectionError:
+            except Exception:
                 print(f'Failed to connect to neighbour {neighbour_addr}. Trying again...')
                 continue
             
