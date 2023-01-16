@@ -63,6 +63,7 @@ class CdnNode(Node):
     
     def _connect_to_addr(self, addr: Address) -> Connection:  
         nb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        nb_socket.settimeout(2)
         nb_socket.connect(addr)
         
         return (nb_socket, addr)
