@@ -2,7 +2,7 @@ from nodes.bootstrap_node import BootstrapNode
 
 
 def main():
-    node = BootstrapNode('localhost', 3333)
+    node = BootstrapNode(3333)
 
     try:
         node.start()

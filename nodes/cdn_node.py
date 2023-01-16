@@ -11,12 +11,11 @@ from nodes.bootstrap_node import NodesState
 class CdnNode(Node):
     def __init__(
         self, 
-        ip: str, 
         port: int, 
         pages_updater: PagesUpdater,
         bootstrap_addr: Address
     ):
-        super().__init__(ip, port)
+        super().__init__(port)
         self._update_timeout = 2
         self._neighbours: List[Address] = []
         self._updater: Thread = None
@@ -121,7 +120,7 @@ class CdnNode(Node):
             try:
                 bootstrap_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 bootstrap_socket.connect(self._bootstrap_addr)
-                bootstrap_socket.sendall(f'{self._ip}:{self._port}'.encode('utf-8'))
+                bootstrap_socket.sendall(str(self._port).encode('utf-8'))
                 print('Connected to bootstrap node')
                 break
             except Exception:

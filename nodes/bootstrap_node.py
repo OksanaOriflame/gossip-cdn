@@ -12,8 +12,8 @@ class NodesState(BaseModel):
     neighbours: List[Address]
 
 class BootstrapNode(Node):
-    def __init__(self, ip: str, port: str) -> None:
-        super().__init__(ip, port)
+    def __init__(self, port: str) -> None:
+        super().__init__(port)
         self._nodes: Dict[socket.socket, Address] = {}
         self._nodes_lock: Lock = Lock()
         self._nodes_acessable_ttl: int = 4
@@ -27,14 +27,13 @@ class BootstrapNode(Node):
                 return
             
             rd_socket = rd_sockets[0]
-            data = rd_socket.recv(1024).decode('utf-8')
-            actual_host, actual_port = data.split(':')
+            actual_port = rd_socket.recv(1024).decode('utf-8')
         except Exception as e:
             print(e)
 
         with self._nodes_lock:
-            self._nodes[sock] = (actual_host, int(actual_port))
-            print('New node = ', (actual_host, int(actual_port)))
+            self._nodes[sock] = (addr[0], int(actual_port))
+            print('New node = ', (addr[0], int(actual_port)))
     
     def _run(self):
         while not self._stop_event.is_set():
@@ -48,7 +47,7 @@ class BootstrapNode(Node):
             nodes = set(self._nodes.keys())
             for node in nodes:
                 try:
-                    nodes_addrs = [self._nodes[node] for node in nodes]
+                    nodes_addrs = [self._nodes[_node] for _node in nodes if _node != node]
                     request = NodesState(neighbours=nodes_addrs)
                     node.sendall(request.json().encode('utf-8'))
                 except Exception as e:
