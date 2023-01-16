@@ -1,11 +1,7 @@
 import os
-from merkle_tree.pages.page_repository import PageRepository
 from merkle_tree.persistence.pages_updater import PagesUpdater
 from nodes.cdn_node import CdnNode
 from argparse import ArgumentParser
-from nodes.models.operation import AddOp
-
-from nodes.models.queries import Meta, UpdatePageRequest
 
 
 # TODO:
