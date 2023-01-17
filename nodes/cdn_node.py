@@ -109,7 +109,7 @@ class CdnNode(Node):
             
             try:
                 self._share_with_neighbour(neighbour)
-            except ConnectionError as err:
+            except Exception as err:
                 print(f'Some error occured during sharing data: {err}')
                 continue
             finally:
