@@ -5,7 +5,7 @@ from merkle_tree.persistence.pages_updater import PagesUpdater
 from nodes.bootstrap_node import BootstrapNode
 from nodes.node import Node, Address, Connection
 from typing import List
-from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse
+from nodes.models.queries import GetPageVersionRequest, GetPageVersionResponse, UpdatePageRequest
 
 class CdnNode(Node, Thread):
     def __init__(
@@ -40,13 +40,17 @@ class CdnNode(Node, Thread):
                     return
                 data_str = data.decode('utf-8')
 
-                print(data_str)
                 try:    
                     request = GetPageVersionRequest.parse_raw(data_str)
-                    version = pages_updater.get_latest_version(request)
-                    rd_socket.sendall(version.json().encode('utf-8'))
-                except:
-                    pass
+                    version_response = pages_updater.get_latest_version(request)
+                    rd_socket.sendall(version_response.json().encode('utf-8'))
+                    data = rd_socket.recv(1024)
+                    if data:
+                        update_page_request = UpdatePageRequest(data.decode('utf-8'))
+                        update_page_response = pages_updater.update_page(update_page_request)
+                        rd_socket.sendall(update_page_response.json().encode('utf-8'))
+                except Exception as e:
+                    print('Some error occured while recieving data ', e)
 
     def _choose_neighbour(self) -> Address:
         return tuple([nb for nb in self._neighbours if nb != (self._ip, self._port)][0])
@@ -69,7 +73,15 @@ class CdnNode(Node, Thread):
             page_id=page_version_response.page_id,
             current_version=page_version_response.version
         )
-        print(next_version)
+
+        # За один раз происходит обновления до актуальной версии (while next_version)
+        # Или на +1 версию?
+        if not next_version:
+            # its actual version, nothing to do
+            neighbour[0].sendall(b'')
+            return
+
+        neighbour[0].sendall(next_version.json().encode('utf-8'))
     
     # Делимся информацией 
     def _updater_func(self):

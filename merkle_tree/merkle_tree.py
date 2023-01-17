@@ -1,6 +1,6 @@
 from typing import List
 
-from merkle_tree.Pages.page_file import PageFile
+from merkle_tree.pages.page_file import PageFile
 from .hasher import Hasher
 from .tree_nodes.merkle_node import MerkleNode
 from .tree_nodes.merkle_leaf import MerkleLeaf
