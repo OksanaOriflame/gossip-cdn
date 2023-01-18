@@ -26,7 +26,7 @@ class PagesUpdater(PagesUpdaterBase):
         latest_version_hash = page.merkle_tree.versions[-1].root_node.hash
         return GetPageVersionResponse(page_id=request.page_id, version=latest_version_hash)
 
-    def get_next_version(self, page_id: str, current_version: str) -> Optional[UpdatePageRequest]:
+    def get_next_version(self, page_id: str, current_version: Optional[str]) -> Optional[UpdatePageRequest]:
         page = self.pages.get(page_id)
         if not page:
             raise FileNotFoundError(f"No {page_id} page")

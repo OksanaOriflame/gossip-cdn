@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from merkle_tree.pages.page import Page
 from merkle_tree.pages.page_repository import PageRepository
 from merkle_tree.persistence.update_transaction import UpdateTransaction
@@ -45,8 +45,8 @@ class PagesUpdaterBase:
         update_transaction = UpdateTransaction(page, operations)
         return update_transaction.apply()
 
-    def _get_update_operations(self, page: Page, prev_version_hash: str, next_version_hash: str) -> UpdatePageRequest:
-        prev_version_leafs = page.merkle_tree.get_version(prev_version_hash).leafs
+    def _get_update_operations(self, page: Page, prev_version_hash: Optional[str], next_version_hash: str) -> UpdatePageRequest:
+        prev_version_leafs = [] if not prev_version_hash else  page.merkle_tree.get_version(prev_version_hash).leafs
         next_version_leafs = page.merkle_tree.get_version(next_version_hash).leafs
 
         both_has_leafs = []

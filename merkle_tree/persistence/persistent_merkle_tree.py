@@ -1,6 +1,6 @@
 import os
 import shutil
-from typing import Optional
+from typing import Optional, Tuple
 from merkle_tree.persistence.page_versions import PageVersions
 from ..merkle_tree import MerkleTree
 
@@ -31,10 +31,12 @@ class PersistentMerkleTree:
             raise Exception(f"Version {hash} not found")
         return suitable_versions[0]
 
-    def determine_next_version(self, prev_version_hash) -> Optional[str]:
+    def determine_next_version(self, prev_version_hash: Optional[str]) -> Optional[Tuple[str, str]]:
         versions = self.versions
         prev_version = None
         next_version = None
+        if not prev_version_hash:
+            return None, versions[0]
         for i in range(len(versions)):
             version = versions[i]
             if version.root_node.hash == prev_version_hash and i != len(versions) - 1:
