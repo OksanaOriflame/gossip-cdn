@@ -17,10 +17,10 @@ class Meta(BaseModel):
     page_name: str
 
 class UpdatePageRequest(BaseQuery):
-    prev_version: str
     operations: List[Union[AddOp, RemoveOp, ModifyOp]]
     root_hash: str
     meta: Meta
+    prev_version: Optional[str] = None
 
 class Status(Enum):
     OK = 'ok'

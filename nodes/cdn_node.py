@@ -49,7 +49,7 @@ class CdnNode(Node):
             rd_socket = rd_sockets[0]
             data = rd_socket.recv(1024)
             if data:
-                update_page_request = UpdatePageRequest(data.decode('utf-8'))
+                update_page_request = UpdatePageRequest.parse_raw(data.decode('utf-8'))
                 update_page_response = pages_updater.update_page(update_page_request)
                 rd_socket.sendall(update_page_response.json().encode('utf-8'))
         except Exception as e:
@@ -63,7 +63,7 @@ class CdnNode(Node):
     
     def _connect_to_addr(self, addr: Address) -> Connection:  
         nb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        nb_socket.settimeout(2)
+        nb_socket.settimeout(3)
         nb_socket.connect(addr)
         
         return (nb_socket, addr)
@@ -80,6 +80,7 @@ class CdnNode(Node):
             page_id=page_version_response.page_id,
             current_version=page_version_response.version
         )
+        print(next_version)
 
         # За один раз происходит обновления до актуальной версии (while next_version)
         # Или на +1 версию?
@@ -101,8 +102,8 @@ class CdnNode(Node):
 
             try:
                 neighbour = self._connect_to_addr(neighbour_addr)
-            except Exception:
-                print(f'Failed to connect to neighbour {neighbour_addr}. Trying again...')
+            except Exception as e:
+                print(f'Failed to connect to neighbour {neighbour_addr}. {e}. Trying again...')
                 continue
             
             print(f'Connected to {neighbour_addr}')
@@ -132,6 +133,9 @@ class CdnNode(Node):
         while not self._stop_event.is_set():
             rd_sockets, _, _ = select.select([bootstrap_socket], [], [], 5)
 
+            if not rd_sockets:
+                continue
+        
             rd_socket = rd_sockets[0]
             data = rd_socket.recv(1024)
             if not data:

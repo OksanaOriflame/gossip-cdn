@@ -1,6 +1,7 @@
 import json
 import os
 from typing import Dict, List, Optional, Tuple
+from merkle_tree.merkle_tree import MerkleTree
 from merkle_tree.pages.page import Page
 from merkle_tree.pages.page_repository import PageRepository
 from merkle_tree.persistence.update_transaction import UpdateTransaction
@@ -31,8 +32,8 @@ class PagesUpdaterBase:
         for op in filter(lambda x: isinstance(x, AddOp), request.operations):
             op: AddOp = op
             file_location = os.path.join(dir_name, op.file_name)
-            with open(file_location, "w+") as output_file:
-                output_file.write(op.data.decode("utf-8"))
+            with open(file_location, "wb+") as output_file:
+                output_file.write(op.data)
         
         try:
             repo.append_requested_page(dir_name, request.root_hash)
@@ -45,9 +46,10 @@ class PagesUpdaterBase:
         update_transaction = UpdateTransaction(page, operations)
         return update_transaction.apply()
 
-    def _get_update_operations(self, page: Page, prev_version_hash: Optional[str], next_version_hash: str) -> UpdatePageRequest:
+    def _get_update_operations(self, page: Page, prev_version_hash: Optional[str], next_version_tree: MerkleTree) -> UpdatePageRequest:
+        next_version_hash = next_version_tree.root_node.hash
         prev_version_leafs = [] if not prev_version_hash else  page.merkle_tree.get_version(prev_version_hash).leafs
-        next_version_leafs = page.merkle_tree.get_version(next_version_hash).leafs
+        next_version_leafs = next_version_tree.leafs
 
         both_has_leafs = []
         for prev_leaf in prev_version_leafs:

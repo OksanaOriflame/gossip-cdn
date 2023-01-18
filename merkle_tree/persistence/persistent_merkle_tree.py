@@ -31,23 +31,21 @@ class PersistentMerkleTree:
             raise Exception(f"Version {hash} not found")
         return suitable_versions[0]
 
-    def determine_next_version(self, prev_version_hash: Optional[str]) -> Optional[Tuple[str, str]]:
+    def determine_next_version(self, prev_version_hash: Optional[str]) -> Optional[MerkleTree]:
         versions = self.versions
-        prev_version = None
         next_version = None
         if not prev_version_hash:
-            return None, versions[0]
+            return versions[0]
         for i in range(len(versions)):
             version = versions[i]
             if version.root_node.hash == prev_version_hash and i != len(versions) - 1:
-                prev_version = versions[i].root_node.hash
-                next_version = versions[i + 1].root_node.hash
+                next_version = versions[i + 1]
                 break
         
         if not next_version:
             return None
         
-        return prev_version, next_version
+        return next_version
     
     def get_last_version(self) -> MerkleTree:
         return self.versions[-1]

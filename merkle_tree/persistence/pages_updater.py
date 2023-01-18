@@ -21,7 +21,7 @@ class PagesUpdater(PagesUpdaterBase):
     def get_latest_version(self, request: GetPageVersionRequest) -> GetPageVersionResponse:
         page = self.pages.get(request.page_id)
         if not page:
-            return None
+            return GetPageVersionResponse(page_id=request.page_id, version=None)
         
         latest_version_hash = page.merkle_tree.versions[-1].root_node.hash
         return GetPageVersionResponse(page_id=request.page_id, version=latest_version_hash)

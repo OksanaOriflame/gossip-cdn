@@ -69,8 +69,28 @@ class PageVersions:
         versions["versions"].append(tree.root_node.hash)
         with open(versions_file, 'w+') as outfile:
             json.dump(versions, outfile, indent=4)
+        
+        self.commit_new_files(tree, versions["versions"])
         print(f"Updated page version. New commit - {tree.root_node.hash}")
-    
+
+    def commit_new_files(self, merkle_tree: MerkleTree, versions: List[str]):
+        last_version = versions[-1]
+        prev_version = None if len(versions) == 1 else versions[-2]
+
+        with open(os.path.join(self.versions_dir, f'{last_version}.version.json'), 'r') as f:
+            last_version_leafs = json.load(f)["leafs"]
+        
+        if not prev_version:
+            prev_version_leafs = []
+        else:
+            with open(os.path.join(self.versions_dir, f'{prev_version}.version.json'), 'r') as f:
+                prev_version_leafs = set([leaf["hash"] for leaf in json.load(f)["leafs"]])
+        
+        leafs_to_append = [last_version_leaf for last_version_leaf in last_version_leafs if last_version_leaf["hash"] not in prev_version_leafs]
+
+        for leaf in leafs_to_append:
+            shutil.copy(leaf['file_name'], os.path.join(self.versions_dir, f'{leaf["hash"]}'))
+
     def _create_versions_file(self, merkle_tree: MerkleTree):
         versions = {
             "versions": [merkle_tree.root_node.hash]
