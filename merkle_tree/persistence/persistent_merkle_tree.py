@@ -1,22 +1,28 @@
-
 import os
 import shutil
-from typing import List, Optional, Tuple
+from typing import Optional
 from merkle_tree.persistence.page_versions import PageVersions
-from merkle_tree.tree_nodes.merkle_leaf import MerkleLeaf
-from nodes.models.queries import UpdatePageRequest
 from ..merkle_tree import MerkleTree
 
 
 class PersistentMerkleTree:
     def __init__(self, files, pageId, directory) -> None:
         self.pageId = pageId
+
         initial_merkle_tree = MerkleTree()
         initial_merkle_tree.build_from_files(files)
-        self.versions = [initial_merkle_tree]
+
         self.directory = directory
-        self.versions_repository = PageVersions(directory)
-        self.versions_repository.init_commit(initial_merkle_tree)
+        versions_repository = PageVersions(directory)
+        self.versions_repository = versions_repository
+        self.versions = versions_repository.check_inited()
+
+        if len(self.versions) == 0:
+            self.versions.append(initial_merkle_tree)
+            self.versions_repository.init_commit(initial_merkle_tree)
+        elif self.versions[-1].root_node.hash != initial_merkle_tree.root_node.hash:
+            self.versions.append(initial_merkle_tree)
+            self.versions_repository.append_version(initial_merkle_tree)
     
     def get_version(self, hash: str):
         versions = self.versions
