@@ -7,17 +7,17 @@ Host = str
 Port = int
 Address = Tuple[Host, Port]
 Connection = Tuple[socket.socket, Address]
-
+DEFAULT_HOST = ''
 
 class BaseNode:
-    def __init__(self, ip: str, port: int):
-        self._ip = ip
+    def __init__(self, port: int):
+        self._ip = DEFAULT_HOST
         self._port = port
 
 
 class Node(BaseNode, ABC):
-    def __init__(self, ip: str, port: int) -> None:
-        super().__init__(ip, port)
+    def __init__(self, port: int) -> None:
+        super().__init__(port)
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._stop_event = Event()
         self._stop_timeout = 1
@@ -28,7 +28,7 @@ class Node(BaseNode, ABC):
         pass
 
     def _new_connections_reciver(self):
-        print(f'Started to listen for new connections on {self._ip}:{self._port}')
+        print(f'Started to listen for new connections on {self._server_socket.getsockname()}')
         while not self._stop_event.is_set():
             try:
                 connection = self._server_socket.accept()
