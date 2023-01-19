@@ -22,7 +22,7 @@ class PersistentMerkleTree:
             self.versions_repository.init_commit(initial_merkle_tree)
         elif self.versions[-1].root_node.hash != initial_merkle_tree.root_node.hash:
             self.versions.append(initial_merkle_tree)
-            self.versions_repository.append_version(initial_merkle_tree)
+            self.versions_repository.append_version_from_current_files(initial_merkle_tree)
     
     def get_version(self, hash: str):
         versions = self.versions
@@ -48,11 +48,16 @@ class PersistentMerkleTree:
         return next_version
     
     def get_last_version(self) -> MerkleTree:
-        return self.versions[-1]
+        return self.versions[-1] 
     
     def create_new_version(self, merkle_tree: MerkleTree):
-        self.versions_repository.append_version(merkle_tree)
+        self.versions_repository.append_version_from_blobs(merkle_tree)
         self.versions.append(merkle_tree)
+
+    def remove_version(self, version_hash):
+        self.versions_repository.pop_version(version_hash)
+        if len(self.versions) > 0 and self.versions[-1].root_node.hash == version_hash:
+            self.versions = self.versions[:-1]
     
     def checkout(self, hash: str, build_directory: str):
         suitable_versions = list(filter(lambda x: x.root_node.hash == hash, self.versions))

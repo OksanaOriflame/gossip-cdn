@@ -16,7 +16,8 @@ class MerkleLeaf(MerkleNode):
         return {
             "hash": self.hash,
             "is_leaf": self.is_leaf(),
-            "file_name": self.file_location
+            "file_name": self.file_name,
+
         }
 
     def __repr__(self) -> str:

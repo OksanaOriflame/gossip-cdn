@@ -30,7 +30,7 @@ class PageVersions:
             with open(version_file, "r") as outfile:
                 version = json.load(outfile)
             merkle_tree = MerkleTree()
-            merkle_leafs = list(map(lambda x: MerkleLeaf(x["hash"], x["file_name"]), version["leafs"]))
+            merkle_leafs = list(map(lambda x: MerkleLeaf(x["hash"], os.path.join(self.directory, x["file_name"])), version["leafs"]))
             merkle_tree.build_from_leafs(merkle_leafs)
             result.append(merkle_tree)
         return result
@@ -69,7 +69,7 @@ class PageVersions:
         with open(file_location, "rb") as outfile:
             return outfile.read()
 
-    def append_version(self, tree: MerkleTree):
+    def append_version_from_current_files(self, tree: MerkleTree):
         self._create_new_version_file(tree)
 
         versions_file = os.path.join(self.versions_dir, "versions.json")
@@ -81,6 +81,33 @@ class PageVersions:
         
         self.commit_new_files(tree, versions["versions"])
         print(f"Updated page version. New commit - {tree.root_node.hash}")
+    
+    def append_version_from_blobs(self, tree: MerkleTree):
+        self._create_new_version_file(tree)
+
+        versions_file = os.path.join(self.versions_dir, "versions.json")
+        with open(versions_file, "r") as outfile:
+            versions = json.load(outfile)
+        versions["versions"].append(tree.root_node.hash)
+        with open(versions_file, 'w+') as outfile:
+            json.dump(versions, outfile, indent=4)
+        
+        print(f"Updated page version. New commit - {tree.root_node.hash}")
+    
+    def pop_version(self, version_hash: str):
+        versions_file = os.path.join(self.versions_dir, "versions.json")
+        with open(versions_file, "r") as outfile:
+            versions = json.load(outfile)
+        version_list = versions["versions"]
+        if len(version_list) != 0 and version_list[-1]["hash"] == version_hash:
+            versions["versions"] = version_list[:-1]
+
+            with open(versions_file, 'w+') as outfile:
+                json.dump(versions, outfile, indent=4)
+        
+        version_file = os.join(self.versions_dir, f"{version_hash}.version.json")
+        if os.path.isfile(version_file):
+            os.remove(version_file)
 
     def commit_new_files(self, merkle_tree: MerkleTree, versions: List[str]):
         last_version = versions[-1]
@@ -98,7 +125,8 @@ class PageVersions:
         leafs_to_append = [last_version_leaf for last_version_leaf in last_version_leafs if last_version_leaf["hash"] not in prev_version_leafs]
 
         for leaf in leafs_to_append:
-            shutil.copy(leaf['file_name'], os.path.join(self.versions_dir, f'{leaf["hash"]}'))
+            file_name = os.path.join(self.directory, leaf["file_name"])
+            shutil.copy(file_name, os.path.join(self.versions_dir, f'{leaf["hash"]}'))
 
     def _create_versions_file(self, merkle_tree: MerkleTree):
         versions = {

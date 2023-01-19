@@ -37,7 +37,11 @@ class PagesUpdaterBase:
         
         try:
             repo.append_requested_page(dir_name, request.root_hash)
+            self.pages[request.page_id] = repo.get_page(request.page_id)
         except Exception as e:
+            print("An error has occured during page creation.")
+            print(f"Page id - {request.page_id}")
+            print(e)
             return UpdatePageResponse(status=Status.ERROR)
         return UpdatePageResponse(status=Status.OK)
 

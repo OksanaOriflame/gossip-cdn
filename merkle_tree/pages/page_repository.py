@@ -1,7 +1,7 @@
 from glob import glob
 import os
 import shutil
-from typing import List
+from typing import List, Optional
 from .page import Page
 
 
@@ -30,3 +30,11 @@ class PageRepository:
             del page
             raise Exception
         self.pages.append(page)
+    
+    def get_page(self, page_id: str) -> Optional[Page]:
+        pages = list(filter(lambda x: x.id == page_id, self.pages))
+        if len(pages) > 1:
+            raise Exception(f"Pages repository contains multiple pages with id {page_id}")
+        if len(pages) == 0:
+            return None
+        return pages[0]

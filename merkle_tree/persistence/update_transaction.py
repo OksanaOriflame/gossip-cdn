@@ -31,11 +31,14 @@ class UpdateTransaction:
             if root_hash != self.request.root_hash:
                 raise Exception()
             self.page.merkle_tree.create_new_version(new_merkle_tree)
+            self.page.update_to_last_version()
         except Exception as e:
             self._revert_changes()
+            self.page.merkle_tree.remove_version(self.request.root_hash)
+            self.page.update_to_last_version()
+            print(e)
             return UpdatePageResponse(status=Status.ERROR)
         
-        self.page.update_to_last_version()
         return UpdatePageResponse(status=Status.OK)
     
     def _add(self, file_data: str, file_name: str):
