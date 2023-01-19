@@ -9,7 +9,7 @@ class Hasher:
     @staticmethod
     def get_hash(data: Union[str, bytes]):
         if isinstance(data, str):
-            data = data.encode()
+            data = data.encode('utf-8')
         return hashlib.sha256(data).hexdigest()
 
     @staticmethod
@@ -22,4 +22,4 @@ class Hasher:
         if not left:
             raise NullNodeException()
         full_str = f"{left_hash}{right_hash}"
-        return hashlib.sha256(full_str.encode()).hexdigest()
+        return hashlib.sha256(full_str.encode('utf-8')).hexdigest()

@@ -4,6 +4,7 @@ import shutil
 from typing import List, Tuple
 from merkle_tree.hasher import Hasher
 from merkle_tree.merkle_tree import MerkleTree
+from merkle_tree.pages.read_text_file import read_text_file
 from merkle_tree.tree_nodes.merkle_leaf import MerkleLeaf
 
 from nodes.models.queries import UpdatePageRequest
@@ -40,13 +41,21 @@ class PageVersions:
         self._commit_leafs(merkle_tree)
     
     def add_file(self, file_data) -> Tuple[bool, str]:
-        hash = Hasher.get_hash(file_data)
+        hash = self.hash_hack(file_data)
         new_file = os.path.join(self.versions_dir, hash)
         if os.path.isfile(new_file):
             return True, hash
         with open(new_file, 'wb+') as outfile:
             outfile.write(file_data)
         return False, hash
+    
+    def hash_hack(self, data) -> str:
+        temp_file_name = os.path.join(self.versions_dir, "temp_file")
+        with open(temp_file_name, "wb+") as output_file:
+            output_file.write(data)
+        hash = Hasher.get_hash(read_text_file(temp_file_name))
+        os.remove(temp_file_name)
+        return hash
     
     def remove_file(self, hash) -> None:
         file_path = os.path.join(self.versions_dir, hash)

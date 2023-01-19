@@ -47,6 +47,12 @@ class PagesUpdaterBase:
         return update_transaction.apply()
 
     def _get_update_operations(self, page: Page, prev_version_hash: Optional[str], next_version_tree: MerkleTree) -> UpdatePageRequest:
+        def contains_leaf(leaf: MerkleLeaf, leafs: List[MerkleLeaf]):
+            for leaf_ in leafs:
+                if leaf_.file_name == leaf.file_name and leaf.hash == leaf.hash:
+                    return True
+            return False
+        
         next_version_hash = next_version_tree.root_node.hash
         prev_version_leafs = [] if not prev_version_hash else  page.merkle_tree.get_version(prev_version_hash).leafs
         next_version_leafs = next_version_tree.leafs
@@ -57,8 +63,9 @@ class PagesUpdaterBase:
                 if prev_leaf.hash == next_leaf.hash and prev_leaf.file_location == next_leaf.file_location:
                     both_has_leafs.append(prev_leaf)
         
-        extra_prev_leafs = [x for x in prev_version_leafs if x not in both_has_leafs]
-        extra_next_leafs = [x for x in next_version_leafs if x not in both_has_leafs]
+
+        extra_prev_leafs = [x for x in prev_version_leafs if not contains_leaf(x, both_has_leafs)]
+        extra_next_leafs = [x for x in next_version_leafs if not contains_leaf(x, both_has_leafs)]
 
         same_names_leafs = [(prev, next) for prev in extra_prev_leafs for next in extra_next_leafs if prev.file_name == next.file_name]
         
